@@ -15,7 +15,12 @@ import cn.bmob.im.BmobChat;
 import cn.bmob.im.BmobUserManager;
 import cn.bmob.im.bean.BmobChatUser;
 import cn.bmob.im.db.BmobDB;
+import cn.bmob.v3.datatype.BmobGeoPoint;
 
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.mapapi.SDKInitializer;
 import com.nostra13.universalimageloader.cache.disc.impl.UnlimitedDiscCache;
 import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
 import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
@@ -29,13 +34,17 @@ import com.wind.gaohui.bombchat.R;
 
 /**
  * 自定义全局Application类
- * 
- * @author HGao
- * 
+ * @author gaohui
+ *
  */
 public class CustomApplication extends Application {
 
 	private static CustomApplication instance;
+	
+	public LocationClient mLocationClient;
+	public MyLocationListener mMyLocationListener;
+
+	public static BmobGeoPoint lastPoint = null;// 上一次定位到的经纬度
 
 	@Override
 	public void onCreate() {
@@ -55,6 +64,45 @@ public class CustomApplication extends Application {
 			// 获取本地好友user list到内存,方便以后获取好友list
 			contactList = CollectionUtils.list2map(BmobDB.create(
 					getApplicationContext()).getContactList());
+		}
+		
+		initBaidu();
+	}
+
+	/**
+	 * 初始化百度相关的SDK
+	 */
+	private void initBaidu() {
+		// 初始化地图Sdk
+		SDKInitializer.initialize(this);
+		// 初始化定位sdk
+		initBaiduLocClient();
+	}
+
+	private void initBaiduLocClient() {
+		mLocationClient = new LocationClient(this.getApplicationContext());
+		mMyLocationListener = new MyLocationListener();
+		mLocationClient.registerLocationListener(mMyLocationListener);
+	}
+	
+	/**
+	 * 实现实位回调监听
+	 */
+	public class MyLocationListener implements BDLocationListener {
+
+		@Override
+		public void onReceiveLocation(BDLocation location) {
+			// Receive Location
+			double latitude = location.getLatitude();
+			double longtitude = location.getLongitude();
+			if (lastPoint != null) {
+				if (lastPoint.getLatitude() == location.getLatitude()
+						&& lastPoint.getLongitude() == location.getLongitude()) {
+					mLocationClient.stop();
+					return;
+				}
+			}
+			lastPoint = new BmobGeoPoint(longtitude, latitude);
 		}
 	}
 

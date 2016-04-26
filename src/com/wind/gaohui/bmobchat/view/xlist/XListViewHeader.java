@@ -1,7 +1,5 @@
 package com.wind.gaohui.bmobchat.view.xlist;
 
-import com.wind.gaohui.bombchat.R;
-
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.text.format.Time;
@@ -16,21 +14,23 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-@SuppressLint("InflateParams")
-public class XListViewHeader extends LinearLayout {
+import com.wind.gaohui.bombchat.R;
 
-	private static final long ROTATE_ANIM_DURATION = 180;
+@SuppressLint("InflateParams")
+public class XListViewHeader extends LinearLayout{
 	private LinearLayout mContainer;
 	private ImageView mArrowImageView;
-	private TextView mHintTextView;
 	private ProgressBar mProgressBar;
+	private TextView mHintTextView;
 	private TextView mHeaderTimeView;
 	private TextView mHeaderTimeLabel;
-	private RotateAnimation mRotateUpAnim;
-	private RotateAnimation mRotateDownAnim;
-
 	private int mState = STATE_NORMAL;
 
+	private Animation mRotateUpAnim;
+	private Animation mRotateDownAnim;
+	
+	private final int ROTATE_ANIM_DURATION = 180;
+	
 	public final static int STATE_NORMAL = 0;
 	public final static int STATE_READY = 1;
 	public final static int STATE_REFRESHING = 2;
@@ -40,13 +40,18 @@ public class XListViewHeader extends LinearLayout {
 		initView(context);
 	}
 
+	/**
+	 * @param context
+	 * @param attrs
+	 */
 	public XListViewHeader(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		initView(context);
 	}
 
 	private void initView(Context context) {
-		// 初始状态下，设置下拉刷新的view高度为0
+		this.isInEditMode();
+		// 初始情况，设置下拉刷新view高度为0
 		LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
 				android.view.ViewGroup.LayoutParams.MATCH_PARENT, 0);
 		mContainer = (LinearLayout) LayoutInflater.from(context).inflate(
@@ -54,18 +59,17 @@ public class XListViewHeader extends LinearLayout {
 		addView(mContainer, lp);
 		setGravity(Gravity.BOTTOM);
 
-		mArrowImageView = (ImageView) findViewById(R.id.xlistview_header_arrow);
-		mHintTextView = (TextView) findViewById(R.id.xlistview_header_hint_textview);
-		mProgressBar = (ProgressBar) findViewById(R.id.xlistview_header_progressbar);
-		mHeaderTimeView = (TextView) findViewById(R.id.xlistview_header_time);
-		mHeaderTimeLabel = (TextView) findViewById(R.id.xlistview_header_time_label);
-
+		mArrowImageView = (ImageView)findViewById(R.id.xlistview_header_arrow);
+		mHintTextView = (TextView)findViewById(R.id.xlistview_header_hint_textview);
+		mProgressBar = (ProgressBar)findViewById(R.id.xlistview_header_progressbar);
+		mHeaderTimeView = (TextView)findViewById(R.id.xlistview_header_time);
+		mHeaderTimeLabel = (TextView)findViewById(R.id.xlistview_header_time_label);
+		
 		mRotateUpAnim = new RotateAnimation(0.0f, -180.0f,
 				Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
 				0.5f);
 		mRotateUpAnim.setDuration(ROTATE_ANIM_DURATION);
 		mRotateUpAnim.setFillAfter(true);
-
 		mRotateDownAnim = new RotateAnimation(-180.0f, 0.0f,
 				Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
 				0.5f);
@@ -74,19 +78,18 @@ public class XListViewHeader extends LinearLayout {
 	}
 
 	public void setState(int state) {
-		if (state == mState)
-			return;
-
-		if (state == STATE_REFRESHING) { // 显示进度
+		if (state == mState) return ;
+		
+		if (state == STATE_REFRESHING) {	// 显示进度
 			mArrowImageView.clearAnimation();
 			mArrowImageView.setVisibility(View.INVISIBLE);
 			mProgressBar.setVisibility(View.VISIBLE);
-		} else { // 显示进度图片
+		} else {	// 显示箭头图片
 			mArrowImageView.setVisibility(View.VISIBLE);
 			mProgressBar.setVisibility(View.INVISIBLE);
 		}
-
-		switch (state) {
+		
+		switch(state){
 		case STATE_NORMAL:
 			if (mState == STATE_READY) {
 				mArrowImageView.startAnimation(mRotateDownAnim);
@@ -109,11 +112,12 @@ public class XListViewHeader extends LinearLayout {
 			time.setToNow();
 			setRefreshTime(time.format("%Y-%m-%d %T"));
 			break;
-		default:
-			break;
+			default:
 		}
+		
+		mState = state;
 	}
-
+	
 	public void setVisiableHeight(int height) {
 		if (height < 0)
 			height = 0;
@@ -123,13 +127,12 @@ public class XListViewHeader extends LinearLayout {
 		mContainer.setLayoutParams(lp);
 	}
 
+	public int getVisiableHeight() {
+		return mContainer.getHeight();
+	}
+	
 	public void setRefreshTime(String time) {
 		mHeaderTimeLabel.setVisibility(View.VISIBLE);
 		mHeaderTimeView.setText(time);
 	}
-
-	public int getVisiableHeight() {
-		return mContainer.getHeight();
-	}
-
 }

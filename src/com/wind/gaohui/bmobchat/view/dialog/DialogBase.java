@@ -4,6 +4,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
 import android.view.WindowManager;
@@ -84,6 +85,7 @@ public abstract class DialogBase extends Dialog {
 		TextView titleTextView = (TextView) findViewById(R.id.dialog_title);
 		titleTextView.setText(this.getTitle());
 		TextView messageTextView = (TextView) findViewById(R.id.dialog_message);
+		Log.i("DialogBase","message" + this.getMessage());
 		messageTextView.setText(this.getMessage());
 
 		if (view != null) {
@@ -92,7 +94,7 @@ public abstract class DialogBase extends Dialog {
 			// TODO 这里的处理很模糊
 			findViewById(R.id.dialog_contentPanel).setVisibility(View.GONE);
 		} else {
-			findViewById(R.id.dialog_contentPanel).setVisibility(View.GONE);
+			findViewById(R.id.dialog_customPanel).setVisibility(View.GONE);
 		}
 
 		//设置按钮的事件监听

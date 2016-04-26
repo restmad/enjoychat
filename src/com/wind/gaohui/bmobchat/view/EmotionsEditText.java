@@ -35,30 +35,28 @@ public class EmotionsEditText extends EditText {
 		}
 	}
 
-	private CharSequence replace(String string) {
+	private CharSequence replace(String text) {
 		try {
-			SpannableString spannableString = new SpannableString(string);
+			SpannableString spannableString = new SpannableString(text);
 			int start = 0;
 			Pattern pattern = buildPattern();
-			Matcher matcher = pattern.matcher(string);
+			Matcher matcher = pattern.matcher(text);
 			while (matcher.find()) {
 				String faceText = matcher.group();
 				String key = faceText.substring(1);
 				BitmapFactory.Options options = new BitmapFactory.Options();
-				Bitmap bitmap = BitmapFactory.decodeResource(
-						getContext().getResources(),
-						getContext().getResources().getIdentifier(key, "drawable",
-								getContext().getPackageName()), options);
+				Bitmap bitmap = BitmapFactory.decodeResource(getContext().getResources(),
+						getContext().getResources().getIdentifier(key, "drawable", getContext().getPackageName()), options);
 				ImageSpan imageSpan = new ImageSpan(getContext(), bitmap);
-				int startIndex = string.indexOf(faceText, start);
+				int startIndex = text.indexOf(faceText, start);
 				int endIndex = startIndex + faceText.length();
-				if(startIndex >= 0) {
+				if (startIndex >= 0)
 					spannableString.setSpan(imageSpan, startIndex, endIndex, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-				}
+				start = (endIndex - 1);
 			}
 			return spannableString;
 		} catch (Exception e) {
-			return string;
+			return text;
 		}
 	}
 

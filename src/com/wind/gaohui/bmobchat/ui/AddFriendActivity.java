@@ -67,7 +67,7 @@ public class AddFriendActivity extends ActivityBase implements
 		// 不允许下拉刷新
 		mListView.setPullRefreshEnable(false);
 		// 设置监听
-		mListView.setListViewListener(this);
+		mListView.setXListViewListener(this);
 
 		mListView.pullRefreshing();
 

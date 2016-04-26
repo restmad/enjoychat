@@ -10,8 +10,8 @@
 
     <FrameLayout
         android:layout_width="fill_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="0.0dip"
+        android:layout_weight="1.0"
         android:background="@color/msg_chat_bg" >
 
         <com.wind.gaohui.bmobchat.view.xlist.XListView
@@ -31,11 +31,11 @@
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:layout_gravity="center"
+            android:visibility="invisible"
             android:background="@drawable/chat_top_voice_bg"
-            android:padding="10dp"
-            android:visibility="invisible" >
-            
-             <ImageView
+            android:padding="10dp" >
+
+            <ImageView
                 android:id="@+id/iv_record"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
@@ -46,12 +46,16 @@
             <TextView
                 android:id="@+id/tv_voice_tips"
                 style="@style/Smile.TextView._White"
+                android:layout_width="match_parent"
                 android:layout_below="@id/iv_record"
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="10dp"
                 android:text="@string/voice_up_tips"
                 android:textSize="14sp" />
+
         </RelativeLayout>
     </FrameLayout>
+
+    <include layout="@layout/include_chat_bottom_bar" />
 
 </LinearLayout>

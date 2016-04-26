@@ -46,7 +46,7 @@ public class NearPeopleActivity extends ActivityBase implements
 		// 允许下拉
 		mListView.setPullRefreshEnable(true);
 		// 设置监听器
-		mListView.setListViewListener(this);
+		mListView.setXListViewListener(this);
 		// 默认情况下就执行这个动作--->下拉刷新
 		mListView.pullRefreshing();
 

@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.text.SpannableString;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -42,30 +43,29 @@ import com.wind.gaohui.bombchat.R;
 @SuppressLint("InflateParams")
 public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 
-	// 8种item的类型
-	// 文本
+	//8种Item的类型
+	//文本
 	private final int TYPE_RECEIVER_TXT = 0;
 	private final int TYPE_SEND_TXT = 1;
-	// 图片
-	private final int TYPE_RECEIVER_IMAGE = 2;
-	private final int TYPE_SEND_IMAGE = 3;
-	// 位置
-	private final int TYPE_RECEIVER_LOCATION = 4;
-	private final int TYPE_SEND_LOCATION = 5;
-	// 语音
-	private final int TYPE_RECEIVER_VOICE = 6;
-	private final int TYPE_SEND_VOICE = 7;
-
-	String currentObjectId = "";
+	//图片
+	private final int TYPE_SEND_IMAGE = 2;
+	private final int TYPE_RECEIVER_IMAGE = 3;
+	//位置
+	private final int TYPE_SEND_LOCATION = 4;
+	private final int TYPE_RECEIVER_LOCATION = 5;
+	//语音
+	private final int TYPE_SEND_VOICE =6;
+	private final int TYPE_RECEIVER_VOICE = 7;
 	
+	String currentObjectId = "";
+
 	DisplayImageOptions options;
 	
 	private ImageLoadingListener animateFirstListener = new AnimateFirstDisplayListener();
-
-	public MessageChatAdapter(Context context, List<BmobMsg> list) {
-		super(context, list);
-		currentObjectId = BmobUserManager.getInstance(context)
-				.getCurrentUserObjectId();
+	
+	public MessageChatAdapter(Context context,List<BmobMsg> msgList) {
+		super(context, msgList);
+		currentObjectId = BmobUserManager.getInstance(context).getCurrentUserObjectId();
 		
 		options = new DisplayImageOptions.Builder()
 		.showImageForEmptyUri(R.drawable.ic_launcher)
@@ -83,33 +83,58 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 	@Override
 	public int getItemViewType(int position) {
 		BmobMsg msg = list.get(position);
-		int type = msg.getMsgType();
-		if (type == BmobConfig.TYPE_IMAGE) {
-			return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_IMAGE
-					: TYPE_RECEIVER_IMAGE;
-		} else if (type == BmobConfig.TYPE_VOICE) {
-			return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_VOICE
-					: TYPE_RECEIVER_VOICE;
-		} else if (type == BmobConfig.TYPE_LOCATION) {
-			return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_LOCATION
-					: TYPE_RECEIVER_LOCATION;
-		} else {
-			return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_TXT
-					: TYPE_RECEIVER_TXT;
+		if(msg.getMsgType()==BmobConfig.TYPE_IMAGE){
+			return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_IMAGE: TYPE_RECEIVER_IMAGE;
+		}else if(msg.getMsgType()==BmobConfig.TYPE_LOCATION){
+			return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_LOCATION: TYPE_RECEIVER_LOCATION;
+		}else if(msg.getMsgType()==BmobConfig.TYPE_VOICE){
+			return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_VOICE: TYPE_RECEIVER_VOICE;
+		}else{
+		    return msg.getBelongId().equals(currentObjectId) ? TYPE_SEND_TXT: TYPE_RECEIVER_TXT;
+		}
+	}
+
+	@Override
+	public int getViewTypeCount() {
+		return 8;
+	}
+	
+	private View createViewByType(BmobMsg message, int position) {
+		int type = message.getMsgType();
+	   if(type==BmobConfig.TYPE_IMAGE){//图片类型
+			return getItemViewType(position) == TYPE_RECEIVER_IMAGE ? 
+					mLayoutInflater.inflate(R.layout.item_chat_received_image, null) 
+					:
+					mLayoutInflater.inflate(R.layout.item_chat_sent_image, null);
+		}else if(type==BmobConfig.TYPE_LOCATION){//位置类型
+			return getItemViewType(position) == TYPE_RECEIVER_LOCATION ? 
+					mLayoutInflater.inflate(R.layout.item_chat_received_location, null) 
+					:
+					mLayoutInflater.inflate(R.layout.item_chat_sent_location, null);
+		}else if(type==BmobConfig.TYPE_VOICE){//语音类型
+			return getItemViewType(position) == TYPE_RECEIVER_VOICE ? 
+					mLayoutInflater.inflate(R.layout.item_chat_received_voice, null) 
+					:
+					mLayoutInflater.inflate(R.layout.item_chat_sent_voice, null);
+		}else{//剩下默认的都是文本
+			return getItemViewType(position) == TYPE_RECEIVER_TXT ? 
+					mLayoutInflater.inflate(R.layout.item_chat_received_message, null) 
+					:
+					mLayoutInflater.inflate(R.layout.item_chat_sent_message, null);
 		}
 	}
 
 	@Override
 	public View bindView(final int position, View convertView, ViewGroup parent) {
+		// TODO Auto-generated method stub
 		final BmobMsg item = list.get(position);
 		if (convertView == null) {
 			convertView = createViewByType(item, position);
 		}
-		
 		//文本类型
 		ImageView iv_avatar = ViewHolder.get(convertView, R.id.iv_avatar);
-		ImageView iv_fail_resend = ViewHolder.get(convertView, R.id.iv_fail_resend);
-		TextView tv_send_status = ViewHolder.get(convertView, R.id.tv_send_status);
+		final ImageView iv_fail_resend = ViewHolder.get(convertView, R.id.iv_fail_resend);//失败重发
+		final TextView tv_send_status = ViewHolder.get(convertView, R.id.tv_send_status);//发送状态
 		TextView tv_time = ViewHolder.get(convertView, R.id.tv_time);
 		TextView tv_message = ViewHolder.get(convertView, R.id.tv_message);
 		//图片
@@ -122,6 +147,7 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 		//语音长度
 		final TextView tv_voice_length = ViewHolder.get(convertView, R.id.tv_voice_length);
 		
+		//点击头像进入个人资料
 		String avatar = item.getBelongAvatar();
 		if(avatar!=null && !avatar.equals("")){//加载头像-为了不每次都加载头像
 			ImageLoader.getInstance().displayImage(avatar, iv_avatar, ImageLoadOptions.getOptions(),animateFirstListener);
@@ -129,10 +155,11 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 			iv_avatar.setImageResource(R.drawable.head);
 		}
 		
-		//点击头像进入个人资料
 		iv_avatar.setOnClickListener(new OnClickListener() {
+			
 			@Override
-			public void onClick(View v) {
+			public void onClick(View arg0) {
+				// TODO Auto-generated method stub
 				Intent intent =new Intent(mContext,SetMyInfoActivity.class);
 				if(getItemViewType(position) == TYPE_RECEIVER_TXT 
 						||getItemViewType(position) == TYPE_RECEIVER_IMAGE
@@ -190,25 +217,28 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 				}
 			}
 		}
-		
 		//根据类型显示内容
 		final String text = item.getContent();
 		switch (item.getMsgType()) {
 		case BmobConfig.TYPE_TEXT:
 			try {
-				SpannableString spannableString = FaceTextUtils.toSpannableString(mContext, text);
+				SpannableString spannableString = FaceTextUtils
+						.toSpannableString(mContext, text);
 				tv_message.setText(spannableString);
 			} catch (Exception e) {
 			}
 			break;
-		case BmobConfig.TYPE_IMAGE:
+
+		case BmobConfig.TYPE_IMAGE://图片类
 			try {
-				if(text != null && !"".equals(text)) {
+				if (text != null && !text.equals("")) {//发送成功之后存储的图片类型的content和接收到的是不一样的
 					dealWithImage(position, progress_load, iv_fail_resend, tv_send_status, iv_picture, item);
 				}
 				iv_picture.setOnClickListener(new OnClickListener() {
+					
 					@Override
 					public void onClick(View arg0) {
+						// TODO Auto-generated method stub
 						Intent intent =new Intent(mContext,ImageBrowserActivity.class);
 						ArrayList<String> photos = new ArrayList<String>();
 						photos.add(getImageUrl(item));
@@ -217,10 +247,12 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 						mContext.startActivity(intent);
 					}
 				});
+				
 			} catch (Exception e) {
 			}
 			break;
-		case BmobConfig.TYPE_LOCATION:
+			
+		case BmobConfig.TYPE_LOCATION://位置信息
 			try {
 				if (text != null && !text.equals("")) {
 					String address  = text.split("&")[0];
@@ -231,6 +263,7 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 						
 						@Override
 						public void onClick(View arg0) {
+							// TODO Auto-generated method stub
 							Intent intent = new Intent(mContext, LocationActivity.class);
 							intent.putExtra("type", "scan");
 							intent.putExtra("latitude", Double.parseDouble(latitude));//维度
@@ -243,7 +276,7 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 				
 			}
 			break;
-		case BmobConfig.TYPE_VOICE:
+		case BmobConfig.TYPE_VOICE://语音消息
 			try {
 				if (text != null && !text.equals("")) {
 					tv_voice_length.setVisibility(View.VISIBLE);
@@ -299,18 +332,20 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 			} catch (Exception e) {
 				
 			}
+			
 			break;
 		default:
 			break;
 		}
 		return convertView;
 	}
-	/**
-	 * 获得图片url
-	 * @param item
-	 * @return
-	 */
-	protected String getImageUrl(BmobMsg item) {
+	
+	/** 获取图片的地址
+	  * @param @param item
+	  * @return String
+	  * @throws
+	  */
+	private String getImageUrl(BmobMsg item){
 		String showUrl = "";
 		String text = item.getContent();
 		if(item.getBelongId().equals(currentObjectId)){//
@@ -324,20 +359,20 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 		}
 		return showUrl;
 	}
-
-	/**
-	 * 处理图片
-	 * @param position
-	 * @param progress_load
-	 * @param iv_fail_resend
-	 * @param tv_send_status
-	 * @param iv_picture
-	 * @param item
-	 */
-	private void dealWithImage(int position, final ProgressBar progress_load,ImageView iv_fail_resend, 
-			TextView tv_send_status,ImageView iv_picture, BmobMsg item) {
+	
+	
+	/** 处理图片
+	  * @param @param position
+	  * @param @param progress_load
+	  * @param @param iv_fail_resend
+	  * @param @param tv_send_status
+	  * @param @param iv_picture
+	  * @param @param item 
+	  */
+	private void dealWithImage(int position,final ProgressBar progress_load,ImageView iv_fail_resend,TextView tv_send_status,ImageView iv_picture,BmobMsg item){
 		String text = item.getContent();
-		if(getItemViewType(position) == TYPE_SEND_IMAGE) {  //发送的消息
+		if(getItemViewType(position)==TYPE_SEND_IMAGE){//发送的消息
+			Log.i("smile", position+",状态："+item.getStatus());
 			if(item.getStatus()==BmobConfig.STATUS_SEND_START){
 				progress_load.setVisibility(View.VISIBLE);
 				iv_fail_resend.setVisibility(View.INVISIBLE);
@@ -366,59 +401,44 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 			}
 			//为了方便每次都是取本地图片显示
 			ImageLoader.getInstance().displayImage(showUrl, iv_picture);
-		} else {
-			ImageLoader.getInstance().displayImage(text, iv_picture, options, new ImageLoadingListener() {
+		}else{
+			ImageLoader.getInstance().displayImage(text, iv_picture,options,new ImageLoadingListener() {
 				
 				@Override
 				public void onLoadingStarted(String imageUri, View view) {
+					// TODO Auto-generated method stub
 					progress_load.setVisibility(View.VISIBLE);
 				}
 				
 				@Override
 				public void onLoadingFailed(String imageUri, View view,
 						FailReason failReason) {
+					// TODO Auto-generated method stub
 					progress_load.setVisibility(View.INVISIBLE);
 				}
 				
 				@Override
 				public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+					// TODO Auto-generated method stub
 					progress_load.setVisibility(View.INVISIBLE);
 				}
 				
 				@Override
 				public void onLoadingCancelled(String imageUri, View view) {
+					// TODO Auto-generated method stub
 					progress_load.setVisibility(View.INVISIBLE);
 				}
 			});
 		}
 	}
-
-	private View createViewByType(BmobMsg message, int position) {
-		int type = message.getMsgType();
-		if (type == BmobConfig.TYPE_IMAGE) { // 图片类型
-			return getItemViewType(position) == TYPE_RECEIVER_IMAGE ? 
-					mLayoutInflater.inflate(R.layout.item_chat_received_image, null) : 
-					mLayoutInflater.inflate(R.layout.item_chat_sent_image, null);
-		} else if(type == BmobConfig.TYPE_VOICE) {  //语音类型
-			return getItemViewType(position) == TYPE_RECEIVER_VOICE ? 
-					mLayoutInflater.inflate(R.layout.item_chat_received_voice, null) : 
-					mLayoutInflater.inflate(R.layout.item_chat_sent_voice, null);
-		} else if(type == BmobConfig.TYPE_LOCATION) {  //位置类型
-			return getItemViewType(position) == TYPE_RECEIVER_LOCATION ? 
-					mLayoutInflater.inflate(R.layout.item_chat_received_location, null) : 
-					mLayoutInflater.inflate(R.layout.item_chat_sent_location, null);
-		} else { //剩下的都是文本
-			return getItemViewType(position) == TYPE_RECEIVER_TXT ? 
-					mLayoutInflater.inflate(R.layout.item_chat_received_message, null) : 
-					mLayoutInflater.inflate(R.layout.item_chat_sent_message, null);
-		}
-	}
-
+	
 	private static class AnimateFirstDisplayListener extends SimpleImageLoadingListener {
+
 		static final List<String> displayedImages = Collections.synchronizedList(new LinkedList<String>());
+
 		@Override
-		public void onLoadingComplete(String imageUri, View view,Bitmap loadedImage) {
-			if(loadedImage != null) {
+		public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+			if (loadedImage != null) {
 				ImageView imageView = (ImageView) view;
 				boolean firstDisplay = !displayedImages.contains(imageUri);
 				if (firstDisplay) {
@@ -428,4 +448,5 @@ public class MessageChatAdapter extends BaseListAdapter<BmobMsg> {
 			}
 		}
 	}
+	
 }

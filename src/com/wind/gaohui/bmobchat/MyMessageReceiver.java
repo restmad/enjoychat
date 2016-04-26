@@ -152,39 +152,28 @@ public class MyMessageReceiver extends BroadcastReceiver {
 								}
 							}
 						} else if (tag.equals(BmobConfig.TAG_ADD_AGREE)) {
-							// **********同意添加好友的tag*********
-							String username = BmobJsonUtil.getString(obj,
-									BmobConstant.PUSH_KEY_TARGETAVATAR);
-							// 收到对方的同意请求后，就需要添加对方为好友
-							// 默认添加同意方为好友，并保存到本地数据库
-							BmobUserManager.getInstance(context)
-									.addContactAfterAgree(username,
-											new FindListener<BmobChatUser>() {
-
-												@Override
-												public void onSuccess(
-														List<BmobChatUser> arg0) {
-													// 保存到内存中
-													CustomApplication
-															.getInstance()
-															.setContactList(
-																	CollectionUtils
-																			.list2map(BmobDB
-																					.create(context)
-																					.getContactList()));
-												}
-
-												@Override
-												public void onError(int arg0,
-														String arg1) {
-
-												}
-											});
-							// 显示通知
-							showOtherNotify(context, username, toId, username
-									+ "同意添加您为好友", MainActivity.class);
-							// 创建一个临时会话，用于在会话界面形成初始会话
+							String username = BmobJsonUtil.getString(obj, BmobConstant.PUSH_KEY_TARGETUSERNAME);
+							//收到对方的同意请求之后，就得添加对方为好友--已默认添加同意方为好友，并保存到本地好友数据库
+							BmobUserManager.getInstance(context).addContactAfterAgree(username, new FindListener<BmobChatUser>() {
+								
+								@Override
+								public void onError(int arg0, final String arg1) {
+									// TODO Auto-generated method stub
+									
+								}
+								
+								@Override
+								public void onSuccess(List<BmobChatUser> arg0) {
+									// TODO Auto-generated method stub
+									//保存到内存中
+									CustomApplication.getInstance().setContactList(CollectionUtils.list2map(BmobDB.create(context).getContactList()));
+								}
+							});
+							//显示通知
+							showOtherNotify(context, username, toId,  username+"同意添加您为好友", MainActivity.class);
+							//创建一个临时验证会话--用于在会话界面形成初始会话
 							BmobMsg.createAndSaveRecentAfterAgree(context, json);
+							
 						} else if (tag.equals(BmobConfig.TAG_READED)) {
 							// *********已读回执*********
 							String conversationId = BmobJsonUtil.getString(obj,

@@ -85,27 +85,33 @@ public class NewFriendAdapter extends BaseListAdapter<BmobInvitation> {
 		progress.setMessage("正在添加...");
 		progress.setCanceledOnTouchOutside(false);
 		progress.show();
-		
-		BmobUserManager.getInstance(mContext).agreeAddContact(msg, new UpdateListener() {
-			
-			@SuppressWarnings("deprecation")
-			@Override
-			public void onSuccess() {
-				progress.dismiss();
-				btn_add.setText("已同意");
-				btn_add.setBackgroundDrawable(null);
-				btn_add.setTextColor(mContext.getResources().getColor(R.color.base_color_text_black));
-				btn_add.setEnabled(false);
-				//保存到application中方便比较
-				CustomApplication.getInstance().setContactList(CollectionUtils.list2map(BmobDB.create(mContext).getContactList()));	
-			}
-			
-			@Override
-			public void onFailure(int arg0, String arg1) {
-				progress.dismiss();
-				showToast("添加失败: " +arg1);
-			}
-		});
+		try {
+			//同意添加好友
+			BmobUserManager.getInstance(mContext).agreeAddContact(msg, new UpdateListener() {
+				
+				@SuppressWarnings("deprecation")
+				@Override
+				public void onSuccess() {
+					// TODO Auto-generated method stub
+					progress.dismiss();
+					btn_add.setText("已同意");
+					btn_add.setBackgroundDrawable(null);
+					btn_add.setTextColor(mContext.getResources().getColor(R.color.base_color_text_black));
+					btn_add.setEnabled(false);
+					//保存到application中方便比较
+					CustomApplication.getInstance().setContactList(CollectionUtils.list2map(BmobDB.create(mContext).getContactList()));	
+				}
+				
+				@Override
+				public void onFailure(int arg0, final String arg1) {
+					progress.dismiss();
+					showToast("添加失败: " +arg1);
+				}
+			});
+		} catch (final Exception e) {
+			progress.dismiss();
+			showToast("添加失败: " +e.getMessage());
+		}
 	}
 
 }
